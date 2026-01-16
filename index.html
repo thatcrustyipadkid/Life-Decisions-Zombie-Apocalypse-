@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZOMBIE: 24 Hours to Survive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background: #000;
+            color: #0f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .game-box {
+            background: #111;
+            border: 3px solid #f00;
+            border-radius: 10px;
+            padding: 30px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 0 30px #f00;
+            transition: all 0.5s;
+        }
+        
+        .death-mode {
+            border-color: #ff0000 !important;
+            box-shadow: 0 0 50px #ff0000 !important;
+            animation: deathPulse 1s infinite !important;
+        }
+        
+        h1 {
+            color: #f44;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px #f00;
+        }
+        
+        .death-title {
+            color: #ff0000 !important;
+            text-shadow: 0 0 20px #ff0000 !important;
+            animation: shake 0.5s infinite !important;
+        }
+        
+        .time {
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #ff0;
+        }
+        
+        .story {
+            background: #001100;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            border-left: 5px solid #0f0;
+            min-height: 150px;
+            transition: all 0.5s;
+        }
+        
+        .death-story {
+            background: #330000 !important;
+            border-left: 5px solid #ff0000 !important;
+            color: #ff8888 !important;
+        }
+        
+        .choices {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .choice-btn {
+            background: #222;
+            color: #0ff;
+            border: 2px solid #0af;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .choice-btn:hover {
+            background: #0af;
+            color: #000;
+            transform: scale(1.02);
+        }
+        
+        .death-btn {
+            border-color: #ff0000 !important;
+            color: #ff8888 !important;
+        }
+        
+        .death-btn:hover {
+            background: #ff0000 !important;
+            color: white !important;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: #220000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            color: #f88;
+            font-size: 1.1em;
+        }
+        
+        .restart-btn {
+            width: 100%;
+            background: #f00;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .restart-btn:hover {
+            background: #c00;
+            transform: scale(1.05);
+        }
+        
+        @keyframes deathPulse {
+            0% { box-shadow: 0 0 30px #ff0000; }
+            50% { box-shadow: 0 0 60px #ff0000; }
+            100% { box-shadow: 0 0 30px #ff0000; }
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(-3px); }
+            25% { transform: translateX(3px); }
+            50% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+            100% { transform: translateX(-3px); }
+        }
+        
+        .death-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="death-screen" id="deathScreen"></div>
+    
+    <div class="game-box" id="gameBox">
+        <h1 id="gameTitle">🧟 24 HOURS TO SURVIVE 🧟</h1>
+        
+        <div class="time">
+            🕐 DAY 1 | TIME: <span id="time">06:00 AM</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">❤️ HEALTH: <span id="health">100</span>%</div>
+            <div class="stat">🍖 FOOD: <span id="food">3</span></div>
+            <div class="stat">⚔️ WEAPONS: <span id="weapons">1</span></div>
+        </div>
+        
+        <div class="story" id="story">
+            <h2>EMERGENCY BROADCAST</h2>
+            <p>ZOMBIE OUTBREAK CONFIRMED. SHELTER IN PLACE. DO NOT GO OUTSIDE.</p>
+            <p>It's 6 AM. You're alone in your apartment. Screams echo from the street. What's your first move?</p>
+            <p style="color: #ff0; margin-top: 10px;">⚠️ Choose wisely! Wrong choices lead to INSTANT DEATH! ⚠️</p>
+        </div>
+        
+        <div class="choices" id="choices">
+            <button class="choice-btn" onclick="makeChoice(1)">A. Barricade the door</button>
+            <button class="choice-btn" onclick="makeChoice(2)">B. Pack a bag and escape</button>
+            <button class="choice-btn" onclick="makeChoice(3)">C. Call for help</button>
+            <button class="choice-btn" onclick="makeChoice(4)">D. Look out the window</button>
+        </div>
+        
+        <button class="restart-btn" onclick="restartGame()" style="display: none;" id="restartBtn">🔄 PLAY AGAIN</button>
+    </div>
+
+    <script>
+        // ============ GAME DATA ============
+        let game = {
+            health: 100,
+            food: 3,
+            weapons: 1,
+            time: "06:00 AM",
+            day: 1,
+            scene: "start",
+            isDead: false
+        };
+        
+        const scenes = {
+            start: {
+                title: "EMERGENCY BROADCAST",
+                text: "<h2>EMERGENCY BROADCAST</h2><p>ZOMBIE OUTBREAK CONFIRMED. SHELTER IN PLACE. DO NOT GO OUTSIDE.</p><p>It's 6 AM. You're alone in your apartment. Screams echo from the street. What's your first move?</p><p style='color: #ff0; margin-top: 10px;'>⚠️ Choose wisely! Wrong choices lead to INSTANT DEATH! ⚠️</p>",
+                choices: [
+                    {text: "A. Barricade the door", next: "barricade", effect: () => game.health -= 10},
+                    {text: "B. Pack a bag and escape", next: "escape", effect: () => game.food++},
+                    {text: "C. Call for help", next: "call", effect: () => game.weapons++},
+                    {text: "D. Look out the window", next: "window"}
+                ]
+            },
+            barricade: {
+                title: "DOOR BARRICADED",
+                text: "<h2>DOOR BARRICADED</h2><p>You push furniture against the door. It holds, but zombies are pounding outside. The noise attracts more.</p><p>Time passes... It's now 12:00 PM.</p><p style='color: #f88;'>The pounding gets louder... They're breaking through!</p>",
+                choices: [
+                    {text: "A. Stay quiet and wait", next: "wait", death: true},
+                    {text: "B. Try to escape through window", next: "windowEscape"},
+                    {text: "C. Prepare to fight", next: "fight", death: true}
+                ]
+            },
+            escape: {
+                title: "ESCAPE ATTEMPT",
+                text: "<h2>ESCAPE ATTEMPT</h2><p>You pack food and a knife. Outside, zombies everywhere! You see a car with keys inside 50 meters away.</p><p>Time: 07:30 AM</p><p style='color: #ff0;'>You have to move fast!</p>",
+                choices: [
+                    {text: "A. Run to the car", next: "runToCar"},
+                    {text: "B. Go back inside", next: "start"},
+                    {text: "C. Hide in alley", next: "alley", death: true}
+                ]
+            },
+            call: {
+                title: "CALLING FOR HELP",
+                text: "<h2>CALLING FOR HELP</h2><p>No signal. Phones are dead. You hear helicopters in the distance but they're not coming here.</p><p>Suddenly, zombies break through a window!</p><p style='color: #f00;'>THEY'RE INSIDE!</p>",
+                choices: [
+                    {text: "A. Fight with your knife", next: "fightZombie", death: true},
+                    {text: "B. Hide in bathroom", next: "bathroom", death: true},
+                    {text: "C. Jump from window", next: "jump"}
+                ]
+            },
+            window: {
+                title: "VIEW FROM WINDOW",
+                text: "<h2>VIEW FROM WINDOW</h2><p>Chaos! People running, zombies chasing. A military truck drives by but doesn't stop. You see a supermarket across the street.</p><p style='color: #ff0;'>Make your move before they see you!</p>",
+                choices: [
+                    {text: "A. Try to reach supermarket", next: "supermarket"},
+                    {text: "B. Stay put", next: "stay", death: true},
+                    {text: "C. Signal for help", next: "signal", death: true}
+                ]
+            },
+            runToCar: {
+                title: "THE CAR",
+                text: "<h2>THE CAR</h2><p>You reach the car! It starts! But zombies surround it. You have to drive through them.</p><p style='color: #0f0;'>FINAL DECISION: This choice determines if you survive Day 1!</p>",
+                choices: [
+                    {text: "A. Go to military base", next: "militaryEnd"},
+                    {text: "B. Find survivors", next: "survivorEnd"}
+                ]
+            },
+            wait: {
+                title: "💀 INSTANT DEATH",
+                text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>You waited too long. Zombies broke through the barricade and overwhelmed you.</p><p><strong>CAUSE OF DEATH:</strong> Indecision and waiting</p><p style='color: #ff0; margin-top: 20px;'>❌ WRONG CHOICE - Should have escaped!</p>",
+                choices: [
+                    {text: "🔄 TRY AGAIN", next: "start"}
+                ],
+                death: true
+            },
+            fight: {
+                title: "💀 INSTANT DEATH",
+                text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>You tried to fight but there were too many zombies. One bite was all it took.</p><p><strong>CAUSE OF DEATH:</strong> Overconfidence in combat</p><p style='color: #ff0; margin-top: 20px;'>❌ WRONG CHOICE - Never fight zombies head-on!</p>",
+                choices: [
+                    {text: "🔄 TRY AGAIN", next: "start"}
+                ],
+                death: true
+            },
+            alley: {
+                title: "💀 INSTANT DEATH",
+                text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>The alley was a dead end. Zombies cornered you with no escape.</p><p><strong>CAUSE OF DEATH:</strong> Bad escape route choice</p><p style='color: #ff0; margin-top: 20px;'>❌ WRONG CHOICE - Always have an exit strategy!</p>",
+                choices: [
+                    {text: "🔄 TRY AGAIN", next: "start"}
+                ],
+                death: true
+            },
+            fightZombie: {
+                title: "💀 INSTANT DEATH",
+                text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>A knife against multiple zombies? You didn't stand a chance.</p><p><strong>CAUSE OF DEATH:</strong> Underestimating the horde</p><p style='color: #ff0; margin-top: 20px;'>❌ WRONG CHOICE - One vs many = certain death!</p>",
+                choices: [
+                    {text: "🔄 TRY AGAIN", next: "start"}
+                ],
+                death: true
+            },
+            bathroom: {
+                title: "💀 INSTANT DEATH",
+                text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>The bathroom had no escape. Zombies broke down the door.</p><p><strong>CAUSE OF DEATH:</strong> Trapped in small space</p><p style='color: #ff0; margin-top: 20px;'>❌ WRONG CHOICE - Never trap yourself!</p>",
+                choices: [
+                    {text: "🔄 TRY AGAIN", next: "start"}
+                ],
+                death: true
+            },
+            stay: {
+                title: "💀 INSTANT DEATH",
+                text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>Zombies saw you in the window. They broke in and got you.</p><p><strong>CAUSE OF DEATH:</strong> Being spotted</p><p style='color: #ff0; margin-top: 20px;'>❌ WRONG CHOICE - Keep moving, never stay!</p>",
+                choices: [
+                    {text: "🔄 TRY AGAIN", next: "start"}
+                ],
+                death: true
+            },
+            signal: {
+                title: "💀 INSTANT DEATH",
+                text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>Your signals attracted zombies, not help. They swarm your position.</p><p><strong>CAUSE OF DEATH:</strong> Drawing attention</p><p style='color: #ff0; margin-top: 20px;'>❌ WRONG CHOICE - Stealth is survival!</p>",
+                choices: [
+                    {text: "🔄 TRY AGAIN", next: "start"}
+                ],
+                death: true
+            },
+            windowEscape: {
+                title: "WINDOW ESCAPE",
+                text: "<h2>SMART ESCAPE!</h2><p>You climb out the window to the fire escape. Smart move! You make it to the roof.</p><p>From here, you see rescue helicopters in the distance!</p><p style='color: #0f0;'>✅ GOOD CHOICE - Roof access provides options!</p>",
+                choices: [
+                    {text: "Continue to roof", next: "roofTop"}
+                ]
+            },
+            roofTop: {
+                title: "ON THE ROOFTOP",
+                text: "<h2>ROOFTOP VIEW</h2><p>You're safe for now. The helicopters are getting closer!</p><p style='color: #0f0;'>You might actually survive this!</p>",
+                choices: [
+                    {text: "Signal the helicopter", next: "helicopterRescue"},
+                    {text: "Wait and observe", next: "waitRooftop"}
+                ]
+            },
+            helicopterRescue: {
+                title: "🎉 YOU SURVIVED!",
+                text: "<h2 style='color: #0f0;'>🎉 RESCUED! 🎉</h2><p>The helicopter sees you! They lower a rope and pull you to safety.</p><p><strong>ENDING: AIRLIFTED TO SAFETY</strong></p><p style='color: #8f8;'>✅ EXCELLENT CHOICES - You made smart moves and survived Day 1!</p>",
+                choices: [
+                    {text: "🔄 PLAY AGAIN", next: "start"}
+                ]
+            },
+            militaryEnd: {
+                title: "🎉 YOU SURVIVED!",
+                text: "<h2 style='color: #0f0;'>🎉 MILITARY RESCUE! 🎉</h2><p>You reach the military checkpoint. They let you in! YOU SURVIVED DAY 1!</p><p><strong>ENDING: SAFE IN QUARANTINE</strong></p><p style='color: #8f8;'>✅ GOOD CHOICE - Military provides protection!</p>",
+                choices: [
+                    {text: "🔄 PLAY AGAIN", next: "start"}
+                ]
+            },
+            survivorEnd: {
+                title: "🎉 YOU SURVIVED!",
+                text: "<h2 style='color: #0f0;'>🎉 FOUND SURVIVORS! 🎉</h2><p>You meet a group hiding in a school. Together you secure the building. YOU SURVIVED DAY 1!</p><p><strong>ENDING: SAFE WITH GROUP</strong></p><p style='color: #8f8;'>✅ GOOD CHOICE - Strength in numbers!</p>",
+                choices: [
+                    {text: "🔄 PLAY AGAIN", next: "start"}
+                ]
+            },
+            jump: {
+                title: "🎉 YOU SURVIVED!",
+                text: "<h2 style='color: #0f0;'>🎉 CLEVER ESCAPE! 🎉</h2><p>You jump to the next building! Injured but alive. You find other survivors on the roof.</p><p><strong>ENDING: INJURED BUT ALIVE</strong></p><p style='color: #8f8;'>✅ GOOD CHOICE - Sometimes risks pay off!</p>",
+                choices: [
+                    {text: "🔄 PLAY AGAIN", next: "start"}
+                ]
+            },
+            supermarket: {
+                title: "SUPERMARKET RAID",
+                text: "<h2>SUPERMARKET</h2><p>You make it to the supermarket! It's been looted but you find canned food and water.</p><p style='color: #0f0;'>✅ SMART - Supplies are crucial for survival!</p>",
+                choices: [
+                    {text: "Gather supplies and find shelter", next: "suppliesEnd"},
+                    {text: "Try to find a vehicle", next: "vehicleSearch"}
+                ]
+            },
+            suppliesEnd: {
+                title: "🎉 YOU SURVIVED!",
+                text: "<h2 style='color: #0f0;'>🎉 PREPARED SURVIVOR! 🎉</h2><p>With supplies secured, you find a safe basement to hide in. You survive Day 1 with resources!</p><p><strong>ENDING: WELL-PREPARED SURVIVOR</strong></p>",
+                choices: [
+                    {text: "🔄 PLAY AGAIN", next: "start"}
+                ]
+            }
+        };
+        
+        // ============ GAME FUNCTIONS ============
+        function makeChoice(choiceIndex) {
+            if (game.isDead) return;
+            
+            const scene = scenes[game.scene];
+            const choice = scene.choices[choiceIndex - 1];
+            
+            if (!choice) return;
+            
+            // Apply effect if exists
+            if (choice.effect) choice.effect();
+            
+            // Update game state
+            game.scene = choice.next;
+            game.isDead = scenes[game.scene]?.death || false;
+            
+            // Update time
+            updateTime();
+            
+            // Update display with death effects if needed
+            updateGame();
+            
+            // Play appropriate sound
+            playSound(game.isDead);
+            
+            // Show death effects if dead
+            if (game.isDead) {
+                showDeathEffects();
+            }
+        }
+        
+        function updateGame() {
+            const scene = scenes[game.scene];
+            
+            if (!scene) return;
+            
+            // Update story
+            const storyDiv = document.getElementById("story");
+            storyDiv.innerHTML = scene.text;
+            
+            // Apply death styling
+            if (scene.death) {
+                storyDiv.className = "story death-story";
+                document.getElementById("gameTitle").className = "death-title";
+                document.getElementById("gameBox").className = "game-box death-mode";
+                document.getElementById("deathScreen").style.display = "block";
+            } else {
+                storyDiv.className = "story";
+                document.getElementById("gameTitle").className = "";
+                document.getElementById("gameBox").className = "game-box";
+                document.getElementById("deathScreen").style.display = "none";
+            }
+            
+            // Update choices
+            const choicesDiv = document.getElementById("choices");
+            choicesDiv.innerHTML = "";
+            
+            scene.choices.forEach((choice, index) => {
+                const button = document.createElement("button");
+                button.className = scene.death ? "choice-btn death-btn" : "choice-btn";
+                button.textContent = choice.text;
+                button.onclick = () => makeChoice(index + 1);
+                choicesDiv.appendChild(button);
+            });
+            
+            // Update stats
+            document.getElementById("health").textContent = game.health;
+            document.getElementById("food").textContent = game.food;
+            document.getElementById("weapons").textContent = game.weapons;
+            document.getElementById("time").textContent = game.time;
+            
+            // Show restart button on death or ending
+            const restartBtn = document.getElementById("restartBtn");
+            if (scene.death || game.scene.includes("End") || game.scene.includes("Rescue")) {
+                restartBtn.style.display = "block";
+            } else {
+                restartBtn.style.display = "none";
+            }
+            
+            // Check health death
+            if (game.health <= 0 && !game.isDead) {
+                game.scene = "healthDeath";
+                game.isDead = true;
+                updateGame();
+            }
+        }
+        
+        function updateTime() {
+            const times = ["06:00 AM", "07:30 AM", "09:00 AM", "12:00 PM", "03:00 PM", "06:00 PM", "09:00 PM"];
+            const currentIndex = times.indexOf(game.time);
+            if (currentIndex < times.length - 1) {
+                game.time = times[currentIndex + 1];
+            }
+        }
+        
+        function playSound(isDeath) {
+            try {
+                if (isDeath) {
+                    // Death sound
+                    for(let i = 0; i < 3; i++) {
+                        setTimeout(() => {
+                            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            const oscillator = audioContext.createOscillator();
+                            const gainNode = audioContext.createGain();
+                            
+                            oscillator.connect(gainNode);
+                            gainNode.connect(audioContext.destination);
+                            
+                            oscillator.frequency.value = 150 - (i * 30);
+                            oscillator.type = 'sawtooth';
+                            
+                            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                            
+                            oscillator.start(audioContext.currentTime);
+                            oscillator.stop(audioContext.currentTime + 0.8);
+                        }, i * 200);
+                    }
+                } else {
+                    // Normal sound
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 300;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                }
+            } catch(e) {
+                console.log("Audio not supported");
+            }
+        }
+        
+        function showDeathEffects() {
+            // Red flash effect
+            const deathScreen = document.getElementById("deathScreen");
+            deathScreen.style.display = "block";
+            
+            // Multiple red flashes
+            for(let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    deathScreen.style.opacity = i % 2 === 0 ? "0.5" : "0.2";
+                }, i * 200);
+            }
+            
+            // Shake effect
+            const gameBox = document.getElementById("gameBox");
+            gameBox.style.animation = "shake 0.1s 5";
+            
+            // Restore after effects
+            setTimeout(() => {
+                gameBox.style.animation = "";
+            }, 1000);
+        }
+        
+        function restartGame() {
+            game = {
+                health: 100,
+                food: 3,
+                weapons: 1,
+                time: "06:00 AM",
+                day: 1,
+                scene: "start",
+                isDead: false
+            };
+            
+            // Reset styles
+            document.getElementById("story").className = "story";
+            document.getElementById("gameTitle").className = "";
+            document.getElementById("gameBox").className = "game-box";
+            document.getElementById("deathScreen").style.display = "none";
+            document.getElementById("restartBtn").style.display = "none";
+            
+            updateGame();
+        }
+        
+        // Add missing scene for health death
+        scenes.healthDeath = {
+            title: "💀 BLEED OUT DEATH",
+            text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>Your injuries were too severe. You bled out before finding help.</p><p><strong>CAUSE OF DEATH:</strong> Critical injuries</p><p style='color: #ff0; margin-top: 20px;'>⚠️ WARNING - Watch your health!</p>",
+            choices: [
+                {text: "🔄 TRY AGAIN", next: "start"}
+            ],
+            death: true
+        };
+        
+        // Add missing scenes
+        scenes.waitRooftop = {
+            title: "ROOFTOP WAIT",
+            text: "<h2>WAITING...</h2><p>You wait too long. The helicopter doesn't see you and flies away.</p><p style='color: #f88;'>Now you're trapped on the roof at night...</p>",
+            choices: [
+                {text: "Try to signal with flashlight", next: "flashlightSignal"},
+                {text: "Stay quiet until morning", next: "morningWait", death: true}
+            ]
+        };
+        
+        scenes.flashlightSignal = {
+            title: "🎉 NIGHT RESCUE!",
+            text: "<h2 style='color: #0f0;'>🎉 RESCUED AT NIGHT! 🎉</h2><p>A military patrol sees your flashlight signal! They rescue you after dark.</p><p><strong>ENDING: NIGHT RESCUE</strong></p>",
+            choices: [
+                {text: "🔄 PLAY AGAIN", next: "start"}
+            ]
+        };
+        
+        scenes.morningWait = {
+            title: "💀 NIGHT ATTACK",
+            text: "<h2 style='color: #f00;'>💀 YOU DIED! 💀</h2><p style='color: #f88;'>Zombies found you on the roof at night. No escape.</p><p><strong>CAUSE OF DEATH:</strong> Nighttime exposure</p>",
+            choices: [
+                {text: "🔄 TRY AGAIN", next: "start"}
+            ],
+            death: true
+        };
+        
+        scenes.vehicleSearch = {
+            title: "VEHICLE SEARCH",
+            text: "<h2>FINDING TRANSPORT</h2><p>You find keys to a delivery truck behind the supermarket!</p><p style='color: #0f0;'>This could be your ticket out of the city!</p>",
+            choices: [
+                {text: "Drive out of city immediately", next: "escapeCity"},
+                {text: "Load more supplies first", next: "loadSupplies"}
+            ]
+        };
+        
+        scenes.escapeCity = {
+            title: "🎉 CITY ESCAPE!",
+            text: "<h2 style='color: #0f0;'>🎉 ESCAPED THE CITY! 🎉</h2><p>You drive through back roads and escape the zombie-infested city!</p><p><strong>ENDING: COUNTRY SURVIVOR</strong></p>",
+            choices: [
+                {text: "🔄 PLAY AGAIN", next: "start"}
+            ]
+        };
+        
+        // Start game
+        window.onload = updateGame;
+    </script>
+</body>
+</html>
